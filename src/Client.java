@@ -3,31 +3,26 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Scanner;
 
-// Quoicoubeh
-public class Client { 
+public class Client {
 
-    // Object server // Main component who represent the server as a socket
-    public Socket client = null;
-
+    private Socket client = null;
     private String ipPublic = "130.190.80.223";
-
     private int port_server = 9081;
 
     public void listenSocket() {
-
         try {
             // Create the client
             Socket client = new Socket(this.ipPublic, port_server);
-            PublicIP publicIP = new PublicIP();
-            System.out.println("Client create at " + port_server + " port with the IP : " + publicIP.getPublicIP());
+            System.out.println("Client connected to server at " + ipPublic + ":" + port_server);
 
             // Actions when stopping the client
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                System.out.println("Shutting down server...");
+                System.out.println("Shutting down client...");
                 try {
                     if (client != null && !client.isClosed()) {
-                        client.close(); // close the listening socket
+                        client.close();
                         System.out.println("Client socket closed.");
                     }
                 } catch (IOException e) {
@@ -37,45 +32,56 @@ public class Client {
 
             PrintWriter out = new PrintWriter(client.getOutputStream(), true);
             BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()));
+            Scanner scanner = new Scanner(System.in);
 
-            // Send one message
-            while (true) {
-
-                String message = "Bonjour";
-                    
-                out.println(message);
-                System.out.println("CLIENT - DATA SEND");
-
-                // Delay 2 secondes
+            // Thread pour recevoir les messages du serveur
+            Thread receiveThread = new Thread(() -> {
                 try {
-                    Thread.sleep(2000); // 2000 millisecondes = 2 secondes
-                } catch (InterruptedException e) {
-                    System.out.println("Thread interrupted: " + e.getMessage());
-                    Thread.currentThread().interrupt(); // Restore interrupted status
-                    break; // Optionally exit the loop
+                    String serverMessage;
+                    while ((serverMessage = in.readLine()) != null) {
+                        System.out.println("SERVER: " + serverMessage);
+                    }
+                } catch (IOException e) {
+                    System.out.println("Error reading from server: " + e.getMessage());
                 }
+            });
+            receiveThread.start();
+
+            // Envoyer des messages personnalisés
+            System.out.println("Type your messages below (type 'exit' to quit):");
+            while (true) {
+                System.out.print("Enter your message: ");
+                String message = scanner.nextLine();
+                if (message.equalsIgnoreCase("exit")) {
+                    System.out.println("Exiting client...");
+                    break;
+                }
+                out.println(message);
+                System.out.println("CLIENT - DATA SENT: " + message);
             }
 
+            // Fermer les ressources
+            scanner.close();
+            client.close();
+
         } catch (IOException e) {
-            System.out.println("Erreur : " + e.getMessage());
+            System.out.println("Error: " + e.getMessage());
             System.exit(-1);
         }
-
     }
 
-    public Socket getClient() {
-        return client;
-    }
+    // Main method to execute the client
+    public static void main(String[] args) {
+        if (args.length < 2) {
+            System.out.println("Usage: java Client <clientName> <clientId>");
+            return;
+        }
 
-    public void setClient(Socket client) {
-        this.client = client;
-    }
+        String clientName = args[0];
+        String clientId = args[1];
 
-    public int getPort_server() {
-        return port_server;
-    }
-
-    public void setPort_server(int port_server) {
-        this.port_server = port_server;
+        System.out.println("Starting client: " + clientName + " (ID: " + clientId + ")");
+        Client client = new Client();
+        client.listenSocket();
     }
 }
