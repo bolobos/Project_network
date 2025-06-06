@@ -4,12 +4,13 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
-public class Client {
+// Quoicoubeh
+public class Client { 
 
     // Object server // Main component who represent the server as a socket
     public Socket client = null;
 
-    private String ipPublic = "130.190.113.147";
+    private String ipPublic = "130.190.80.223";
 
     private int port_server = 9081;
 
