@@ -8,7 +8,7 @@ import java.util.Scanner;
 public class Client {
 
     private Socket client = null;
-    private String ipPublic = "130.190.80.223";
+    private String ipPublic = "192.168.91.155";
     private int port_server = 9081;
 
     public void listenSocket() {
