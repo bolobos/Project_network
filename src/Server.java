@@ -1,26 +1,29 @@
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
-// Server class handle the server, it using TCP communication via socket objects
+// Server class handle the server, it uses TCP communication via socket objects
 public class Server {
 
-    // Object server // Main component who represent the server as a socket
     private ServerSocket server = null;
-
     private int port_server = 9081;
-
     private List<ClientHandler> clients = new ArrayList<>(); // Liste des clients connectés
+    private List<String> neighborServers = new ArrayList<>(); // Liste des serveurs voisins
 
     public void listenSocket() {
-
         try {
             // Créer le serveur
             server = new ServerSocket(port_server);
             PublicIP publicIP = new PublicIP();
             System.out.println("Server created at port " + port_server + " with IP: " + publicIP.getPublicIP());
+
+            // Initialiser le réseau
+            initNetwork();
 
             // Actions lors de l'arrêt du serveur
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -37,7 +40,7 @@ public class Server {
 
             // Boucle pour accepter les nouveaux clients
             while (true) {
-                // Wait for a client / blocking function
+                // Attendre une connexion client (fonction bloquante)
                 Socket client = server.accept();
                 System.out.println("Client connected.");
 
@@ -57,7 +60,54 @@ public class Server {
                 }
             }
         }
+    }
 
+    public void initNetwork() {
+        System.out.println("Initializing network discovery...");
+
+        // Ajouter les serveurs voisins connus au démarrage
+        neighborServers.add("192.168.1.2:9081"); // Exemple d'adresse IP et port
+        neighborServers.add("192.168.1.3:9081"); // Exemple d'adresse IP et port
+
+        for (String neighbor : neighborServers) {
+            try {
+                // Extraire l'IP et le port du serveur voisin
+                String[] parts = neighbor.split(":");
+                String ip = parts[0];
+                int port = Integer.parseInt(parts[1]);
+
+                // Se connecter au serveur voisin
+                Socket socket = new Socket(ip, port);
+                PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+                // Envoyer une requête pour découvrir les clients et serveurs connectés
+                out.println("DISCOVER");
+                String response;
+                while ((response = in.readLine()) != null) {
+                    System.out.println("Received from " + neighbor + ": " + response);
+
+                    // Ajouter les clients et serveurs découverts à nos listes
+                    if (response.startsWith("CLIENT:")) {
+                        String clientInfo = response.substring(7); // Extraire les infos du client
+                        System.out.println("Discovered client: " + clientInfo); // Afficher les infos du client
+                    } else if (response.startsWith("SERVER:")) {
+                        String serverInfo = response.substring(7); // Extraire les infos du serveur
+                        if (!neighborServers.contains(serverInfo)) {
+                            neighborServers.add(serverInfo); // Ajouter à la liste des serveurs voisins
+                        }
+                    }
+                }
+
+                // Fermer la connexion
+                socket.close();
+            } catch (IOException e) {
+                System.out.println("Error connecting to neighbor server " + neighbor + ": " + e.getMessage());
+            }
+        }
+
+        System.out.println("Network discovery completed.");
+        System.out.println("Discovered servers: " + neighborServers.size());
     }
 
     // Méthode pour diffuser un message à tous les clients
