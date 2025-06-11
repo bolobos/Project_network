@@ -1,5 +1,3 @@
-// GROUPE 9
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -10,16 +8,50 @@ import java.util.Scanner;
 public class Client {
 
     private Socket client = null;
-    private String ipPublic = "192.168.91.155";
-    private int port_server = 9081;
+    private String ipPublic = "192.168.91.155"; // Adresse IP publique du serveur
+    private int port_server = 9081; // Port du serveur
 
-    public void listenSocket() {
+    private String name;
+    private String id;
+
+    // Constructeur par défaut
+    public Client() {}
+
+    // Constructeur avec deux arguments
+    public Client(String name, String id) {
+        this.name = name;
+        this.id = id;
+    }
+
+    // Getters et setters
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    @Override
+    public String toString() {
+        return "Client{name='" + name + "', id='" + id + "'}";
+    }
+
+    public void listenSocket(String clientName, String clientId) {
         try {
-            // Create the client
-            Socket client = new Socket(this.ipPublic, port_server);
+            // Créer le client
+            client = new Socket(this.ipPublic, port_server);
             System.out.println("Client connected to server at " + ipPublic + ":" + port_server);
 
-            // Actions when stopping the client
+            // Actions lors de l'arrêt du client
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 System.out.println("Shutting down client...");
                 try {
@@ -35,6 +67,10 @@ public class Client {
             PrintWriter out = new PrintWriter(client.getOutputStream(), true);
             BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()));
             Scanner scanner = new Scanner(System.in);
+
+            // Envoyer les informations du client au serveur
+            out.println("CLIENT:" + clientName + "," + clientId);
+            System.out.println("Client information sent to server.");
 
             // Thread pour recevoir les messages du serveur
             Thread receiveThread = new Thread(() -> {
@@ -84,6 +120,6 @@ public class Client {
 
         System.out.println("Starting client: " + clientName + " (ID: " + clientId + ")");
         Client client = new Client();
-        client.listenSocket();
+        client.listenSocket(clientName, clientId);
     }
 }
