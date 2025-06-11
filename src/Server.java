@@ -1,7 +1,8 @@
-import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -11,6 +12,15 @@ import java.util.List;
 public class Server {
 
     private ServerSocket server = null;
+
+    public enum stateServer {
+        INIT,
+        RUNNING,
+        STOPPED
+    }
+
+    private stateServer state = stateServer.INIT;
+
     private int port_server = 9081;
     private List<ClientHandler> clients = new ArrayList<>(); // Liste des clients connectés
     private List<String> neighborServers = new ArrayList<>(); // Liste des serveurs voisins
@@ -37,6 +47,22 @@ public class Server {
                     System.out.println("Error closing server socket: " + e.getMessage());
                 }
             }));
+
+            /*while (true) {
+                FileOutputStream fileOutputStream = new FileOutputStream("yourfile.txt");
+                ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
+                objectOutputStream.writeObject(person);
+                objectOutputStream.flush();
+                objectOutputStream.close();
+
+                FileInputStream fileInputStream = new FileInputStream("yourfile.txt");
+                ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
+                Person p2 = (Person) objectInputStream.readObject();
+                objectInputStream.close();
+
+                assertTrue(p2.getAge() == person.getAge());
+                assertTrue(p2.getName().equals(person.getName()));
+            }*/
 
             // Boucle pour accepter les nouveaux clients
             while (true) {
