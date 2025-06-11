@@ -1,51 +1,35 @@
-public class Trame {
-    
-    private int id_trame;
-    private int id_client_src;
-    private int id_client_dest;
-    private int ip_server_src;
-    private int ip_server_dest;
-    private String data;
+import java.io.Serializable;
 
-
-    
-
-    public int getId_trame() {
-        return id_trame;
-    }
-    public void setId_trame(int id_trame) {
-        this.id_trame = id_trame;
-    }
-    public int getId_client_src() {
-        return id_client_src;
-    }
-    public void setId_client_src(int id_client_src) {
-        this.id_client_src = id_client_src;
-    }
-    public int getId_client_dest() {
-        return id_client_dest;
-    }
-    public void setId_client_dest(int id_client_dest) {
-        this.id_client_dest = id_client_dest;
-    }
-    public int getIp_server_src() {
-        return ip_server_src;
-    }
-    public void setIp_server_src(int ip_server_src) {
-        this.ip_server_src = ip_server_src;
-    }
-    public int getIp_server_dest() {
-        return ip_server_dest;
-    }
-    public void setIp_server_dest(int ip_server_dest) {
-        this.ip_server_dest = ip_server_dest;
-    }
-    public String getData() {
-        return data;
-    }
-    public void setData(String data) {
-        this.data = data;
-    }
-
-    
+public abstract class Trame implements Serializable {
+	
+	private static final long serialVersionUID = -484492464833561910L;
+	private int type_message; 
+	private String serveur_cible;
+	private String serveur_source;
+	
+	Trame(int type_message, String serveur_cible, String serveur_source){
+		this.type_message = type_message;
+		this.serveur_cible = serveur_cible;
+		this.serveur_source = serveur_source;
+	}
+	
+	public int getType_message() {
+		return type_message;
+	}
+	public void setType_message(int type_message) {
+		this.type_message = type_message;
+	}
+	public String getServeur_cible() {
+		return serveur_cible;
+	}
+	public void setServeur_cible(String serveur_cible) {
+		this.serveur_cible = serveur_cible;
+	}
+	public String getServeur_source() {
+		return serveur_source;
+	}
+	public void setServeur_source(String serveur_source) {
+		this.serveur_source = serveur_source;
+	}
+	
 }

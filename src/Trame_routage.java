@@ -1,7 +1,7 @@
 import java.io.Serializable;
 import java.util.ArrayList;
 
-public class TrameInit implements Serializable {
+public class Trame_routage implements Serializable {
 
     public class ServerDef {
 
@@ -11,7 +11,7 @@ public class TrameInit implements Serializable {
 
     public ArrayList<ServerDef> listServerDefs = new ArrayList<>();
 
-    public TrameInit(){
+    public Trame_routage(){
         
     }
 
