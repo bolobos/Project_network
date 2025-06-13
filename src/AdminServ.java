@@ -1,4 +1,4 @@
-// All is starting there, interact with different actors
+// 
 public class AdminServ {
     public static void main(String[] args) throws Exception {
         System.out.println("Démarrage du serveur...");
@@ -7,17 +7,17 @@ public class AdminServ {
             new Server().listenSocket();
         });
 
-        Thread clientThread = new Thread(() -> {
-            // Fournir les arguments requis pour le client
-            new Client().listenSocket("Alice", "123"); // Exemple de clientName et clientId
-        });
+        // Thread clientThread = new Thread(() -> {
+        //     // Fournir les arguments requis pour le client
+        //     new Client().listenSocket("Alice", "123"); // Exemple de clientName et clientId
+        // });
 
         serverThread.start();
-        clientThread.start();
+        //clientThread.start();
 
         try {
             serverThread.join();
-            clientThread.join();
+            //clientThread.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

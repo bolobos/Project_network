@@ -1,5 +1,6 @@
 import java.util.Scanner;
 
+// Interface pour créer des clients
 public class AdminClient {
     public static void main(String[] args) {
         // Utilisation de try-with-resources pour garantir la fermeture du Scanner
