@@ -1,4 +1,3 @@
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -266,9 +265,10 @@ public class Server {
                         boolean connected = false;
                         while (!connected) {
                             try (Socket testSocket = new Socket(serveur, 9081)) {
+                                System.out.println("Connexion réussie à " + serveur);
                                 connected = true;
                             } catch (IOException e) {
-                                // Attendre 500ms avant de réessayer
+                                System.out.println("Échec de connexion à " + serveur + ", nouvelle tentative dans 500ms...");
                                 try {
                                     Thread.sleep(500);
                                 } catch (InterruptedException ie) {
@@ -284,7 +284,6 @@ public class Server {
 
             }
 
-            state = stateServer.RUNNING;
 
         } catch (UnknownHostException e) {
             e.printStackTrace();
