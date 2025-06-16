@@ -64,6 +64,21 @@ public class Table_routage {
         }
 
         System.out.println("----- FIN TRAITEMENT DE LA TRAME DE ROUTAGE -----");
+
+        
+        // Affichage formaté de la table de routage
+        System.out.println("===== TABLE DE ROUTAGE =====");
+        System.out.printf("%-20s %-20s %-30s %-10s%n", "Serveur", "Passerelle", "Clients Serveurs", "Distance");
+        System.out.println("------------------------------------------------------------------------------------------");
+        for (int i = 0; i < serveurs.size(); i++) {
+            String serveur = serveurs.get(i);
+            String passerelle = passerelles.get(i) != null ? passerelles.get(i).getHostAddress() : "N/A";
+            String clients = clients_serveurs.get(i) != null ? clients_serveurs.get(i).toString() : "[]";
+            int dist = distance.get(i);
+            System.out.printf("%-20s %-20s %-30s %-10d%n", serveur, passerelle, clients, dist);
+        }
+        System.out.println("===== FIN TABLE DE ROUTAGE =====");
+
         return res;
     }
 

@@ -273,26 +273,26 @@ public class Server {
                     trame.setServeur_cible(serveur);
                     try {
                         // Attendre que le serveur distant soit prêt à accepter la connexion
-                        boolean connected = false;
-                        while (!connected) {
-                            try {
-                                SocketAddress sockaddr = new InetSocketAddress(serveur, 9081);
-                                try (Socket testSocket = new Socket()) {
-                                    testSocket.connect(sockaddr, 1000); // timeout de 1000 ms
-                                    System.out.println("Connexion réussie à " + serveur);
-                                    connected = true;
-                                    testSocket.close();
-                                }
-                            } catch (IOException e) {
-                                System.out.println(
-                                        "Échec de connexion à " + serveur + ", nouvelle tentative dans 500ms...");
-                                try {
-                                    Thread.sleep(500);
-                                } catch (InterruptedException ie) {
-                                    Thread.currentThread().interrupt();
-                                }
-                            }
-                        }
+                        // boolean connected = false;
+                        // while (!connected) {
+                        //     try {
+                        //         SocketAddress sockaddr = new InetSocketAddress(serveur, 9081);
+                        //         try (Socket testSocket = new Socket()) {
+                        //             testSocket.connect(sockaddr, 1000); // timeout de 1000 ms
+                        //             System.out.println("Connexion réussie à " + serveur);
+                        //             connected = true;
+                        //             testSocket.close();
+                        //         }
+                        //     } catch (IOException e) {
+                        //         System.out.println(
+                        //                 "Échec de connexion à " + serveur + ", nouvelle tentative dans 500ms...");
+                        //         try {
+                        //             Thread.sleep(500);
+                        //         } catch (InterruptedException ie) {
+                        //             Thread.currentThread().interrupt();
+                        //         }
+                        //     }
+                        // }
                     } catch (Exception e) {
                         System.out
                                 .println("Erreur lors de la connexion au serveur " + serveur + " : " + e.getMessage());
@@ -321,10 +321,12 @@ public class Server {
             scanner.nextLine();
 
             // Envoie de la table pour commencer
-            for (String serveur : rootingTable.getServeurs()) {
-                sendMessage(firstTrame, serveur);
-                System.out.println("Tables de routage envoyées au serveur voisin: " + serveur);
-            }
+            // for (String serveur : rootingTable.getServeurs()) {
+            //     sendMessage(firstTrame, serveur);
+            //     System.out.println("Tables de routage envoyées au serveur voisin: " + serveur);
+            // }
+            sendMessage(firstTrame, "192.168.1.62");
+            //     System.out.println("Tables de routage envoyées au serveur voisin: " + serveur);
         }
 
         // Répète tant que les données ne sont pas les mêmes 5 fois de suite
