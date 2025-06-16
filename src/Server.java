@@ -8,6 +8,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 // Server class handle the server, it uses TCP communication via socket objects
 public class Server {
@@ -200,31 +201,43 @@ public class Server {
 
         // Exemple de création d'une trame de routage
         try {
-            // Liste des serveurs
+            // Création d'un menu pour entrer les IP des serveurs et les clients associés
             ArrayList<String> serveurs = new ArrayList<>();
-            serveurs.add(ipLocal);
-            serveurs.add("192.168.1.62");
-
-            // Liste des passerelles (Inet4Address)
             ArrayList<Inet4Address> passerelles = new ArrayList<>();
-            passerelles.add((Inet4Address) Inet4Address.getByName(ipLocal));
-            // passerelles.add((Inet4Address) Inet4Address.getByName("192.168.1.253"));
-
-            // Liste des clients pour chaque serveur
             ArrayList<ArrayList<String>> clients_serveurs = new ArrayList<>();
-            ArrayList<String> clientsServeur1 = new ArrayList<>();
-            clientsServeur1.add(ipLocal);
-            // clientsServeur1.add("192.168.1.3");
-            ArrayList<String> clientsServeur2 = new ArrayList<>();
-            // clientsServeur2.add("192.168.1.4");
-            // clientsServeur2.add("192.168.1.5");
-            clients_serveurs.add(clientsServeur1);
-            clients_serveurs.add(clientsServeur2);
-
-            // Liste des distances
             ArrayList<Integer> distance = new ArrayList<>();
-            distance.add(1); // distance vers serveur 1
-            distance.add(1); // distance vers serveur 2
+
+            Scanner scanner = new Scanner(System.in);
+
+            System.out.print("Combien de serveurs voulez-vous ajouter ? ");
+            int nbServeurs = Integer.parseInt(scanner.nextLine());
+
+            for (int i = 0; i < nbServeurs; i++) {
+                System.out.print("Entrez l'IP du serveur #" + (i + 1) + " : ");
+                String ipServeur = scanner.nextLine();
+                serveurs.add(ipServeur);
+
+                try {
+                    passerelles.add((Inet4Address) Inet4Address.getByName(ipServeur));
+                } catch (UnknownHostException e) {
+                    System.out.println("IP invalide, passerelle ignorée.");
+                    passerelles.add(null);
+                }
+
+                ArrayList<String> clientsServeur = new ArrayList<>();
+                System.out.print("Combien de clients pour ce serveur ? ");
+                int nbClients = Integer.parseInt(scanner.nextLine());
+                for (int j = 0; j < nbClients; j++) {
+                    System.out.print("Nom du client #" + (j + 1) + " : ");
+                    String nomClient = scanner.nextLine();
+                    clientsServeur.add(nomClient);
+                }
+                clients_serveurs.add(clientsServeur);
+
+                System.out.print("Distance vers ce serveur : ");
+                int dist = Integer.parseInt(scanner.nextLine());
+                distance.add(dist);
+            }
 
             // Création de la trame de routage
             trame = new Trame_routage(
@@ -246,16 +259,26 @@ public class Server {
 
             for (String serveur : serveurs) {
 
-                if (serveur != ipLocal) {
+                if (!serveur.equals(ipLocal)) {
                     trame.setServeur_cible(serveur);
-
                     try {
-                        Thread.sleep(10000); // Délai de 10 secondes
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        System.out.println("Sleep interrupted: " + e.getMessage());
+                        // Attendre que le serveur distant soit prêt à accepter la connexion
+                        boolean connected = false;
+                        while (!connected) {
+                            try (Socket testSocket = new Socket(serveur, 9081)) {
+                                connected = true;
+                            } catch (IOException e) {
+                                // Attendre 500ms avant de réessayer
+                                try {
+                                    Thread.sleep(500);
+                                } catch (InterruptedException ie) {
+                                    Thread.currentThread().interrupt();
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        System.out.println("Erreur lors de la connexion au serveur " + serveur + " : " + e.getMessage());
                     }
-
                     sendMessage(trame, serveur);
                 }
 
