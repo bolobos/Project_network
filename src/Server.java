@@ -1,5 +1,4 @@
 
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -65,59 +64,58 @@ public class Server {
                     try {
 
                         // Boucle pour accepter les nouveaux clients ou serveurs
-                        while (true) {
-                            System.out.println("En attente de réception...");
-                            Socket client = server.accept();
-                            System.out.println(
-                                    "Client or server connected : " + client.getInetAddress().getHostAddress());
-                            try {
-                                ObjectInputStream objectIn = new ObjectInputStream(client.getInputStream());
-                                Object receivedObject = objectIn.readObject();
+                        System.out.println("En attente de réception...");
+                        Socket client = server.accept();
+                        System.out.println(
+                                "Client or server connected : " + client.getInetAddress().getHostAddress());
+                        
+                        try {
+                            ObjectInputStream objectIn = new ObjectInputStream(client.getInputStream());
+                            Object receivedObject = objectIn.readObject();
 
-                                if (receivedObject instanceof Trame_message) {
-                                    Trame_message receivedMessage = (Trame_message) receivedObject;
+                            if (receivedObject instanceof Trame_message) {
+                                Trame_message receivedMessage = (Trame_message) receivedObject;
 
-                                    // Affichage commun
-                                    System.out.println("Message reçu : " + receivedMessage.getDu());
-                                    System.out.println("Depuis : " + receivedMessage.getServeur_source());
-                                    System.out.println("Pour : " + receivedMessage.getClient_cible());
+                                // Affichage commun
+                                System.out.println("Message reçu : " + receivedMessage.getDu());
+                                System.out.println("Depuis : " + receivedMessage.getServeur_source());
+                                System.out.println("Pour le client : " + receivedMessage.getClient_cible());
 
-                                    int res = receivedMessage.redirectMessage(receivedMessage, rootingTable, ipLocal);
+                                int res = receivedMessage.redirectMessage(receivedMessage, rootingTable, ipLocal);
 
-                                    switch (res) {
-                                        case 1:
-                                            // Message destiné au serveur courant
-                                            System.out.println("Message destiné au serveur courant.");
-                                            // Traiter le message ici si besoin
-                                            break;
-                                        case 2:
-                                            // Message destiné à un client local
-                                            System.out.println("Message destiné à un client local.");
-                                            handleTrameMessage(receivedMessage, res);
-                                            break;
-                                        case 3:
-                                            // Message destiné à un autre serveur (client cible non local)
-                                            System.out.println(
-                                                    "Message destiné à un autre serveur (client cible non local).");
-                                            handleTrameMessage(receivedMessage, res);
-                                            break;
-                                        case 4:
-                                            // Message destiné à un autre serveur (serveur cible différent)
-                                            System.out.println(
-                                                    "Message destiné à un autre serveur (serveur cible différent).");
-                                            handleTrameMessage(receivedMessage, res);
-                                            break;
-                                        default:
-                                            System.out.println("Code de redirection inconnu : " + res);
-                                            break;
-                                    }
-
+                                switch (res) {
+                                    case 1:
+                                        // Message destiné au serveur courant
+                                        System.out.println("Message destiné au serveur courant.");
+                                        // Traiter le message ici si besoin
+                                        break;
+                                    case 2:
+                                        // Message destiné à un client local
+                                        System.out.println("Message destiné à un client local.");
+                                        handleTrameMessage(receivedMessage, res);
+                                        break;
+                                    case 3:
+                                        // Message destiné à un autre serveur (client cible non local)
+                                        System.out.println(
+                                                "Message destiné à un autre serveur (client cible non local).");
+                                        handleTrameMessage(receivedMessage, res);
+                                        break;
+                                    case 4:
+                                        // Message destiné à un autre serveur (serveur cible différent)
+                                        System.out.println(
+                                                "Message destiné à un autre serveur (serveur cible différent).");
+                                        handleTrameMessage(receivedMessage, res);
+                                        break;
+                                    default:
+                                        System.out.println("Code de redirection inconnu : " + res);
+                                        break;
                                 }
 
-                                client.close();
-                            } catch (IOException | ClassNotFoundException e) {
-                                System.out.println("Error handling connection: " + e.getMessage());
                             }
+
+                            client.close();
+                        } catch (IOException | ClassNotFoundException e) {
+                            System.out.println("Error handling connection: " + e.getMessage());
                         }
 
                     } catch (IOException e) {
@@ -204,22 +202,22 @@ public class Server {
         try {
             // Liste des serveurs
             ArrayList<String> serveurs = new ArrayList<>();
-            serveurs.add("192.168.1.1");
-            serveurs.add("192.168.1.2");
+            serveurs.add(ipLocal);
+            serveurs.add("192.168.1.62");
 
             // Liste des passerelles (Inet4Address)
             ArrayList<Inet4Address> passerelles = new ArrayList<>();
-            passerelles.add((Inet4Address) Inet4Address.getByName("192.168.1.254"));
-            passerelles.add((Inet4Address) Inet4Address.getByName("192.168.1.253"));
+            passerelles.add((Inet4Address) Inet4Address.getByName(ipLocal));
+            // passerelles.add((Inet4Address) Inet4Address.getByName("192.168.1.253"));
 
             // Liste des clients pour chaque serveur
             ArrayList<ArrayList<String>> clients_serveurs = new ArrayList<>();
             ArrayList<String> clientsServeur1 = new ArrayList<>();
-            clientsServeur1.add("192.168.1.1");
-            clientsServeur1.add("192.168.1.3");
+            clientsServeur1.add(ipLocal);
+            // clientsServeur1.add("192.168.1.3");
             ArrayList<String> clientsServeur2 = new ArrayList<>();
-            clientsServeur2.add("192.168.1.4");
-            clientsServeur2.add("192.168.1.5");
+            // clientsServeur2.add("192.168.1.4");
+            // clientsServeur2.add("192.168.1.5");
             clients_serveurs.add(clientsServeur1);
             clients_serveurs.add(clientsServeur2);
 
@@ -238,6 +236,8 @@ public class Server {
                     clients_serveurs,
                     distance);
 
+            rootingTable.addTable(trame, (Inet4Address) InetAddress.getByName(ipLocal));
+
             // Utilisation de la trame
             System.out.println("Serveurs : " + trame.getServeurs());
             System.out.println("Passerelles : " + trame.getPasserelles());
@@ -245,9 +245,23 @@ public class Server {
             System.out.println("Distances : " + trame.getDistance());
 
             for (String serveur : serveurs) {
-                trame.setServeur_cible(serveur);
-                sendMessage(trame, serveur);
+
+                if (serveur != ipLocal) {
+                    trame.setServeur_cible(serveur);
+
+                    try {
+                        Thread.sleep(10000); // Délai de 10 secondes
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        System.out.println("Sleep interrupted: " + e.getMessage());
+                    }
+
+                    sendMessage(trame, serveur);
+                }
+
             }
+
+            state = stateServer.RUNNING;
 
         } catch (UnknownHostException e) {
             e.printStackTrace();
@@ -277,6 +291,7 @@ public class Server {
 
                 // Fonction bloquante
                 Socket neighborSocket = server.accept();
+
                 ObjectInputStream objectIn = new ObjectInputStream(neighborSocket.getInputStream());
                 Object receivedObject = objectIn.readObject();
 
@@ -296,6 +311,8 @@ public class Server {
                     } else {
                         sameDataCount++;
                     }
+                } else {
+                    sameDataCount = 6;
                 }
                 neighborSocket.close();
                 state = stateServer.RUNNING;
@@ -304,47 +321,4 @@ public class Server {
             }
         }
     }
-
-    // public synchronized void updateRoutingTable(Trame_routage receivedTable) {
-    // System.out.println("Updating routing table...");
-    // for (Trame_routage.ServerDef serverDef : receivedTable.listServerDefs) {
-    // boolean exists = routingTable.listServerDefs.stream()
-    // .anyMatch(def -> def.adressServer.equals(serverDef.adressServer));
-    // if (!exists) {
-    // routingTable.listServerDefs.add(serverDef);
-    // System.out.println("Added new server to routing table: " +
-    // serverDef.adressServer);
-    // }
-    // }
-    // System.out.println("Routing table updated.");
-    // }
-
-    // // Méthode pour diffuser un message à tous les clients
-    // public synchronized void broadcastMessage(String message, ClientHandler
-    // sender) {
-    // System.out.println("Broadcasting message: " + message);
-    // for (ClientHandler client : clients) {
-    // if (client != sender) { // Ne pas renvoyer le message à l'expéditeur
-    // client.sendMessage(message);
-    // System.out.println("Message sent to client: " + client.getClientName());
-    // }
-    // }
-    // }
-
-    // // Méthode pour supprimer un client de la liste lorsqu'il se déconnecte
-    // public synchronized void removeClient(ClientHandler client) {
-    // clients.remove(client);
-    // System.out.println("Removed client: " + client.getClientName());
-    // }
-
-    // public synchronized ClientHandler getClientByName(String name) {
-    // for (ClientHandler client : clients) {
-    // if (client.getClientName().equalsIgnoreCase(name)) {
-    // System.out.println("Found client by name: " + name);
-    // return client;
-    // }
-    // }
-    // System.out.println("Client not found by name: " + name);
-    // return null; // Retourne null si aucun client avec ce nom n'est trouvé
-    // }
 }

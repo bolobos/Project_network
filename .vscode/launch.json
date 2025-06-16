@@ -8,25 +8,25 @@
             "type": "java",
             "name": "Lancer AdminClient",
             "request": "launch",
-            "mainClass": "global_package.AdminClient"
+            "mainClass": "AdminClient"
         },
         {
             "type": "java",
             "name": "Lancer AdminServ",
             "request": "launch",
-            "mainClass": "global_package.AdminServ"
+            "mainClass": "AdminServ"
         },
         {
             "type": "java",
             "name": "Lancer Client",
             "request": "launch",
-            "mainClass": "global_package.Client"
+            "mainClass": "Client"
         },
         {
             "type": "java",
             "name": "Lancer Server",
             "request": "launch",
-            "mainClass": "global_package.Server"
+            "mainClass": "Server"
         }
     ]
 }

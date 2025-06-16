@@ -37,12 +37,20 @@ public class AdminClient {
                                 clientId = scanner.nextLine().trim();
                             }
 
+                            System.out.print("Enter server IP: ");
+                            String ipServ = scanner.nextLine().trim();
+                            while (ipServ.isEmpty()) {
+                                System.out.print("Server IP cannot be empty. Enter server IP: ");
+                                ipServ = scanner.nextLine().trim();
+                            }
+
+
                             // Créer et afficher le client
-                            Client newClient = new Client(clientName, clientId);
+                            Client newClient = new Client(clientName, clientId,ipServ);
                             System.out.println("Client created: " + newClient);
 
                             // Lancer un nouveau terminal pour exécuter le client
-                            launchClientTerminal(clientName, clientId);
+                            launchClientTerminal(clientName, clientId,ipServ);
                             break;
 
                         case 2:
@@ -63,7 +71,7 @@ public class AdminClient {
     }
 
     // Méthode pour lancer un nouveau terminal et exécuter le client
-    private static void launchClientTerminal(String clientName, String clientId) {
+    private static void launchClientTerminal(String clientName, String clientId, String ipServ) {
         try {
             // Commande pour ouvrir un terminal et exécuter le client
             String[] command = {
@@ -71,7 +79,7 @@ public class AdminClient {
                 "--",
                 "bash",
                 "-c",
-                String.format("java -cp ../bin Client %s %s; exec bash", clientName, clientId)
+                String.format("java -cp ../bin Client %s %s %s; exec bash", clientName, clientId,ipServ)
             };
 
             // Utilisation de ProcessBuilder
@@ -88,10 +96,12 @@ public class AdminClient {
     static class Client {
         private String name;
         private String id;
+        private String ip;
 
-        public Client(String name, String id) {
+        public Client(String name, String id,String ipServ) {
             this.name = name;
             this.id = id;
+            this.ip=ipServ;
         }
 
         @Override
