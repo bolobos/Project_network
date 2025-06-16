@@ -3,8 +3,10 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -15,6 +17,7 @@ public class Server {
     private ServerSocket server = null;
     private int port_server = 9081;
     private String ipLocal;
+    private boolean servPrincipal=false;
 
     private Table_routage rootingTable = new Table_routage();
 
@@ -68,7 +71,7 @@ public class Server {
                         Socket client = server.accept();
                         System.out.println(
                                 "Client or server connected : " + client.getInetAddress().getHostAddress());
-                        
+
                         try {
                             ObjectInputStream objectIn = new ObjectInputStream(client.getInputStream());
                             Object receivedObject = objectIn.readObject();
@@ -208,6 +211,14 @@ public class Server {
 
             Scanner scanner = new Scanner(System.in);
 
+            System.out.print("Ce serveur est-il le serveur principal ? (oui/non) : ");
+            String principalInput = scanner.nextLine().trim().toLowerCase();
+            if (principalInput.equals("oui") || principalInput.equals("o") || principalInput.equals("yes")) {
+                servPrincipal = true;
+            } else {
+                servPrincipal = false;
+            }
+
             System.out.print("Combien de serveurs voulez-vous ajouter ? ");
             int nbServeurs = Integer.parseInt(scanner.nextLine());
 
@@ -264,11 +275,16 @@ public class Server {
                         // Attendre que le serveur distant soit prêt à accepter la connexion
                         boolean connected = false;
                         while (!connected) {
-                            try (Socket testSocket = new Socket(serveur, 9081)) {
-                                System.out.println("Connexion réussie à " + serveur);
-                                connected = true;
+                            try {
+                                SocketAddress sockaddr = new InetSocketAddress(serveur, 9081);
+                                try (Socket testSocket = new Socket()) {
+                                    testSocket.connect(sockaddr, 1000); // timeout de 1000 ms
+                                    System.out.println("Connexion réussie à " + serveur);
+                                    connected = true;
+                                }
                             } catch (IOException e) {
-                                System.out.println("Échec de connexion à " + serveur + ", nouvelle tentative dans 500ms...");
+                                System.out.println(
+                                        "Échec de connexion à " + serveur + ", nouvelle tentative dans 500ms...");
                                 try {
                                     Thread.sleep(500);
                                 } catch (InterruptedException ie) {
@@ -277,13 +293,13 @@ public class Server {
                             }
                         }
                     } catch (Exception e) {
-                        System.out.println("Erreur lors de la connexion au serveur " + serveur + " : " + e.getMessage());
+                        System.out
+                                .println("Erreur lors de la connexion au serveur " + serveur + " : " + e.getMessage());
                     }
                     sendMessage(trame, serveur);
                 }
 
             }
-
 
         } catch (UnknownHostException e) {
             e.printStackTrace();
@@ -305,10 +321,16 @@ public class Server {
 
                 Trame_routage firstTrame = initTrame();
 
-                // Envoie de la table pour commencer
-                for (String serveur : rootingTable.getServeurs()) {
-                    sendMessage(firstTrame, serveur);
-                    System.out.println("Tables de routage envoyées au serveur voisin: " + serveur);
+                if (servPrincipal) {
+                    Scanner scanner = new Scanner(System.in);
+                    System.out.println("Appuyez sur Entrée pour continuer et envoyer les premières trames de routage...");
+                    scanner.nextLine();
+
+                    // Envoie de la table pour commencer
+                    for (String serveur : rootingTable.getServeurs()) {
+                        sendMessage(firstTrame, serveur);
+                        System.out.println("Tables de routage envoyées au serveur voisin: " + serveur);
+                    }
                 }
 
                 // Fonction bloquante
