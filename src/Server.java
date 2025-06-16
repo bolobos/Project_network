@@ -17,7 +17,7 @@ public class Server {
     private ServerSocket server = null;
     private int port_server = 9081;
     private String ipLocal;
-    private boolean servPrincipal=false;
+    private boolean servPrincipal = false;
 
     private Table_routage rootingTable = new Table_routage();
 
@@ -313,26 +313,27 @@ public class Server {
 
         int sameDataCount = 0;
 
+        Trame_routage firstTrame = initTrame();
+
+        if (servPrincipal) {
+            Scanner scanner = new Scanner(System.in);
+            System.out.println("Appuyez sur Entrée pour continuer et envoyer les premières trames de routage...");
+            scanner.nextLine();
+
+            // Envoie de la table pour commencer
+            for (String serveur : rootingTable.getServeurs()) {
+                sendMessage(firstTrame, serveur);
+                System.out.println("Tables de routage envoyées au serveur voisin: " + serveur);
+            }
+        }
+
         // Répète tant que les données ne sont pas les mêmes 5 fois de suite
         while (sameDataCount < 5) {
 
             // Attendre la première trame de routage d'un voisin
             try {
 
-                Trame_routage firstTrame = initTrame();
-
-                if (servPrincipal) {
-                    Scanner scanner = new Scanner(System.in);
-                    System.out.println("Appuyez sur Entrée pour continuer et envoyer les premières trames de routage...");
-                    scanner.nextLine();
-
-                    // Envoie de la table pour commencer
-                    for (String serveur : rootingTable.getServeurs()) {
-                        sendMessage(firstTrame, serveur);
-                        System.out.println("Tables de routage envoyées au serveur voisin: " + serveur);
-                    }
-                }
-
+                System.out.println("En attente ...");
                 // Fonction bloquante
                 Socket neighborSocket = server.accept();
                 System.out.println("Serveur accepté.");
