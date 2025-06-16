@@ -296,7 +296,6 @@ public class Server {
                         System.out
                                 .println("Erreur lors de la connexion au serveur " + serveur + " : " + e.getMessage());
                     }
-                    sendMessage(trame, serveur);
                 }
 
             }
