@@ -1,33 +1,55 @@
-import java.io.Serializable;
+
+
+import java.net.Inet4Address;
 import java.util.ArrayList;
 
-public class Trame_routage implements Serializable {
+public class Trame_routage extends Trame {
 
-    public class ServerDef {
+    private ArrayList<String> serveurs;
+    private ArrayList<Inet4Address> passerelles;
+    private ArrayList<ArrayList<String>> clients_serveurs;
+    private ArrayList<Integer> distance;
 
-        public ArrayList<Client> listClientsDef = new ArrayList<>();
-        public String adressServer;
-        
-        public ServerDef(){
+    public Trame_routage(int type_message, String serveur_cible,
+            String serveur_source, ArrayList<String> serveurs, ArrayList<Inet4Address> passerelles,
+            ArrayList<ArrayList<String>> clients_serveurs, ArrayList<Integer> distance) {
 
-        }
-
-        public ServerDef(String adressServer, ArrayList<Client> listClientsDef) {
-            this.adressServer = adressServer;
-            if (listClientsDef != null) {
-            this.listClientsDef = listClientsDef;
-            }
-        }
+        super(type_message, serveur_cible, serveur_source);
+        this.setServeurs(serveurs);
+        this.setPasserelles(passerelles);
+        this.setClients_serveurs(clients_serveurs);
+        this.setDistance(distance);
     }
 
-    public ArrayList<ServerDef> listServerDefs = new ArrayList<>();
-
-    public Trame_routage(){
-        
+    public ArrayList<String> getServeurs() {
+        return serveurs;
     }
 
-    public Trame_routage(ArrayList<ServerDef> listServerDefs) {
-        this.listServerDefs = listServerDefs;
+    public void setServeurs(ArrayList<String> serveurs) {
+        this.serveurs = serveurs;
     }
 
+    public ArrayList<Inet4Address> getPasserelles() {
+        return passerelles;
+    }
+
+    public void setPasserelles(ArrayList<Inet4Address> passerelles) {
+        this.passerelles = passerelles;
+    }
+
+    public ArrayList<ArrayList<String>> getClients_serveurs() {
+        return clients_serveurs;
+    }
+
+    public void setClients_serveurs(ArrayList<ArrayList<String>> clients_serveurs) {
+        this.clients_serveurs = clients_serveurs;
+    }
+
+    public void setDistance(ArrayList<Integer> distance) {
+        this.distance = distance;
+    }
+
+    public ArrayList<Integer> getDistance() {
+        return distance;
+    }
 }

@@ -1,0 +1,32 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Lancer AdminClient",
+            "request": "launch",
+            "mainClass": "global_package.AdminClient"
+        },
+        {
+            "type": "java",
+            "name": "Lancer AdminServ",
+            "request": "launch",
+            "mainClass": "global_package.AdminServ"
+        },
+        {
+            "type": "java",
+            "name": "Lancer Client",
+            "request": "launch",
+            "mainClass": "global_package.Client"
+        },
+        {
+            "type": "java",
+            "name": "Lancer Server",
+            "request": "launch",
+            "mainClass": "global_package.Server"
+        }
+    ]
+}
