@@ -281,6 +281,7 @@ public class Server {
                                     testSocket.connect(sockaddr, 1000); // timeout de 1000 ms
                                     System.out.println("Connexion réussie à " + serveur);
                                     connected = true;
+                                    testSocket.close();
                                 }
                             } catch (IOException e) {
                                 System.out.println(
@@ -334,6 +335,7 @@ public class Server {
 
                 // Fonction bloquante
                 Socket neighborSocket = server.accept();
+                System.out.println("Serveur accepté.");
 
                 ObjectInputStream objectIn = new ObjectInputStream(neighborSocket.getInputStream());
                 Object receivedObject = objectIn.readObject();
