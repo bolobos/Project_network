@@ -336,6 +336,13 @@ public class Server {
                     // Si la table de routage a été mise à jour, renvoyer la table aux serveurs voisins
                     if (rootingTable.addTable(trame, inet4)) {
                         for (String serveur : rootingTable.getServeurs()) {
+
+                            try {
+                                Thread.sleep(500);
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                            }
+
                             Trame_routage trame_r = rootingTable.exportTable(serveur, this.ipLocal);
                             sendMessage(trame_r, serveur);
                             System.out.println("Tables de routage envoyées au serveur voisin: " + serveur);
