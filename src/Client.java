@@ -56,10 +56,12 @@ public class Client {
     }
 
     /**
-     * Méthode principale pour écouter le socket et gérer la communication avec le serveur.
+     * Méthode principale pour écouter le socket et gérer la communication avec le
+     * serveur.
+     * 
      * @param clientName Nom du client
-     * @param clientId Id du client
-     * @param ipServ Adresse IP du serveur
+     * @param clientId   Id du client
+     * @param ipServ     Adresse IP du serveur
      */
     public void listenSocket(String clientName, String clientId, String ipServ) {
 
@@ -78,13 +80,18 @@ public class Client {
             socket = new Socket(ipServ, port_server);
             System.out.println("Client connected to server at " + ipServ + ":" + port_server);
 
+            ObjectOutputStream objectOut = new ObjectOutputStream(socket.getOutputStream());
+            objectOut.writeObject(clientName); // Envoie le nom du client au serveur
+            objectOut.flush();
+
             // Ajout d'un hook pour gérer la fermeture propre du client
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 System.out.println("Shutting down client...");
                 try {
                     if (socket != null && !socket.isClosed()) {
 
-                        sendMessage(disconnectMessage, ipServ);
+                        objectOut.writeObject(disconnectMessage);
+                        objectOut.flush();
 
                         socket.close();
                         System.out.println("Client socket closed.");
@@ -95,8 +102,6 @@ public class Client {
             }));
 
             LocalIP localIP = new LocalIP();
-
-            ObjectOutputStream objectOut = new ObjectOutputStream(socket.getOutputStream());
 
             // Thread pour recevoir les messages du serveur
             Thread receiveThread = new Thread(() -> {
@@ -131,29 +136,28 @@ public class Client {
                 System.out.print("Entrez le client cible: ");
                 String clientCible = scanner.nextLine();
 
-                System.out.print("Entrez l'IP serveur cible: ");
-                String ipServeur = scanner.nextLine();
-
                 System.out.print("Entrez le message: ");
                 String contenu = scanner.nextLine();
 
                 // Création de la trame à envoyer
                 Trame_message trame_message = new Trame_message(
                         1,
-                        ipServeur,
+                        null,
                         ipServ,
                         clientCible,
                         new LocalIP().getLocalIP(),
                         contenu);
 
-                sendMessage(trame_message, ipServeur);
+                objectOut.writeObject(trame_message);
+                objectOut.flush();
 
             }
 
             // Fermeture des ressources à la fin
             if (socket != null && !socket.isClosed()) {
 
-                sendMessage(disconnectMessage, serveur_cible);
+                objectOut.writeObject(disconnectMessage);
+                objectOut.flush();
 
                 socket.close();
                 System.out.println("Client socket closed.");
@@ -167,6 +171,7 @@ public class Client {
 
     /**
      * Point d'entrée principal du client.
+     * 
      * @param args Arguments de la ligne de commande : nom, id, ip serveur
      */
     public static void main(String[] args) {
@@ -183,23 +188,5 @@ public class Client {
         System.out.println("Connecté à l'IP serveur : " + ipServ);
         Client client = new Client();
         client.listenSocket(clientName, clientId, ipServ);
-    }
-
-    /**
-     * Envoie une trame à un client cible via son IP.
-     * @param trame La trame à envoyer
-     * @param ipCible L'adresse IP du client cible
-     */
-    public void sendMessage(Trame trame, String ipCible) {
-        try {
-            Socket socket = new Socket(ipCible, 9081);
-            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-            out.writeObject(trame);
-            out.flush();
-            socket.close();
-            System.out.println("Trame envoyée au client " + ipCible);
-        } catch (IOException e) {
-            System.out.println("Erreur lors de l'envoi de la trame au serveur " + ipCible + " : " + e.getMessage());
-        }
     }
 }

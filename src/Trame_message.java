@@ -46,13 +46,18 @@ public class Trame_message extends Trame {
      *         <li>2 : Message destiné à un client local (présent dans la table de routage et associé au serveur courant).</li>
      *         <li>3 : Message destiné à un autre serveur (le client cible n'est pas local).</li>
      *         <li>4 : Message destiné à un autre serveur (le serveur cible n'est pas le serveur courant).</li>
+     *         <li>5 : Message destiné à un client extérieur (serveur cible null).</li>
      *         </ul>
      */
     public int redirectMessage(Trame_message trame, Table_routage routingTable, String serveurCourant) {
         // Si le client cible est null ou vide, c'est un message au serveur
         if (trame.getClient_cible() == null || trame.getClient_cible().isEmpty()) {
+            // Si le serveur cible est null, c'est un client extérieur
+            if (trame.getServeur_cible() == null) {
+                return 5; // Message destiné à un client extérieur
+            }
             // Vérifie si le serveur cible est le serveur courant
-            if (trame.getServeur_cible() != null && trame.getServeur_cible().equals(serveurCourant)) {
+            if (trame.getServeur_cible().equals(serveurCourant)) {
                 return 1; // Message destiné au serveur courant
             } else {
                 return 4; // Message destiné à un autre serveur

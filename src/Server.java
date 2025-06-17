@@ -25,6 +25,7 @@ public class Server {
     private ServerSocket server = null;
 
     private final Map<String, Socket> clientNameToSocket = new ConcurrentHashMap<>();
+    private final Map<String, ObjectOutputStream> clientNameToOut = new ConcurrentHashMap<>();
 
     /** Port d'écoute du serveur. */
     private int port_server = 9081;
@@ -186,7 +187,8 @@ public class Server {
                                 out.flush();
                                 System.out.println("Message envoyé au client local : " + client_cible);
                             } catch (IOException e) {
-                                System.out.println("Erreur lors de l'envoi de la trame au client " + client_cible + " : " + e.getMessage());
+                                System.out.println("Erreur lors de l'envoi de la trame au client " + client_cible
+                                        + " : " + e.getMessage());
                             }
                             return; // Message envoyé, on quitte la méthode
                         } else {
@@ -200,11 +202,13 @@ public class Server {
 
             case 3:
             case 4:
-                // Message destiné à un autre serveur (client cible non local ou serveur cible différent)
+                // Message destiné à un autre serveur (client cible non local ou serveur cible
+                // différent)
                 for (int i = 0; i < rootingTable.getClients_serveurs().size(); i++) {
                     ArrayList<String> clients = rootingTable.getClients_serveurs().get(i);
                     if (clients.contains(client_cible)) { // Cherche le serveur qui gère ce client
-                        String passerelle = rootingTable.getPasserelles().get(i).getHostAddress(); // Récupère l'IP de la passerelle
+                        String passerelle = rootingTable.getPasserelles().get(i).getHostAddress(); // Récupère l'IP de
+                                                                                                   // la passerelle
                         sendMessage(trame, passerelle); // Relaye la trame vers la passerelle
                         System.out.println(
                                 "Message relayé à la passerelle : " + passerelle + " pour client " + client_cible);
@@ -348,12 +352,12 @@ public class Server {
             scanner.nextLine();
 
             // Envoie de la table pour commencer (ici, exemple avec une IP en dur)
-            // for (String serveur : rootingTable.getServeurs()) {
-            // sendMessage(firstTrame, serveur);
-            // System.out.println("Tables de routage envoyées au serveur voisin: " +
-            // serveur);
-            // }
-            sendMessage(firstTrame, "192.168.1.62");
+            for (String serveur : rootingTable.getServeurs()) {
+                sendMessage(firstTrame, serveur);
+                System.out.println("Tables de routage envoyées au serveur voisin: " +
+                        serveur);
+            }
+            //sendMessage(firstTrame, "192.168.1.62");
         }
 
         // Répète tant que les données ne sont pas les mêmes 5 fois de suite
