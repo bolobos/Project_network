@@ -322,8 +322,19 @@ public class Server {
         while (sameDataCount < 5) {
             try {
                 System.out.println("En attente ...");
-                // Attente d'une trame de routage d'un voisin
-                Socket neighborSocket = server.accept();
+                // Attente d'une trame de routage d'un voisin avec timeout de 5 secondes
+                server.setSoTimeout(5000);
+                Socket neighborSocket;
+                try {
+                    neighborSocket = server.accept();
+                } catch (java.net.SocketTimeoutException e) {
+                    System.out.println("Aucune demande reçue en 5 secondes, arrêt de l'attente.");
+                    System.out.println("========== PASSAGE EN MODE MESSAGE ==========");
+                    break;
+                } finally {
+                    // Remettre le timeout à 0 (infini) si besoin pour les prochaines accept
+                    server.setSoTimeout(0);
+                }
                 System.out.println("Serveur accepté.");
 
                 ObjectInputStream objectIn = new ObjectInputStream(neighborSocket.getInputStream());
