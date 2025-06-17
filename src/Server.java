@@ -322,37 +322,20 @@ public class Server {
         while (sameDataCount < 5) {
             try {
                 System.out.println("En attente ...");
-                Socket neighborSocket = null;
-                long startTime = System.currentTimeMillis();
-                long timeout = 5000; // 5 secondes
-
-                while (neighborSocket == null && (System.currentTimeMillis() - startTime) < timeout) {
-                    try {
-                        if (server != null && !server.isClosed()) {
-                            server.setSoTimeout((int) (timeout - (System.currentTimeMillis() - startTime)));
-                        }
-                        neighborSocket = server.accept();
-                    } catch (java.net.SocketTimeoutException e) {
-                        // Timeout atteint, sortir de la boucle
-                        System.out.println("Aucune demande reçue en 5 secondes, arrêt de l'attente.");
-                        System.out.println("========== PASSAGE EN MODE MESSAGE ==========");
-                        break;
-                    } catch (IOException e) {
-                        System.out.println("Erreur lors de l'attente d'une connexion : " + e.getMessage());
-                        break;
-                    }
-                }
-                // Remettre le timeout à 0 (infini) pour les prochaines accept
-                if (server != null && !server.isClosed()) {
+                // Attente d'une trame de routage d'un voisin avec timeout de 5 secondes
+                server.setSoTimeout(5000);
+                Socket neighborSocket;
+                try {
+                    neighborSocket = server.accept();
+                } catch (java.net.SocketTimeoutException e) {
+                    System.out.println("Aucune demande reçue en 5 secondes, arrêt de l'attente.");
+                    System.out.println("========== PASSAGE EN MODE MESSAGE ==========");
+                    break;
+                } finally {
+                    // Remettre le timeout à 0 (infini) si besoin pour les prochaines accept
                     server.setSoTimeout(0);
                 }
-                if (neighborSocket == null) {
-                    // Sortir du while principal si aucun voisin n'a répondu dans le temps imparti
-                    state = stateServer.RUNNING;
-                    break;
-                } else {
-                    System.out.println("Serveur accepté.");
-                }
+                System.out.println("Serveur accepté.");
                 
 
                 ObjectInputStream objectIn = new ObjectInputStream(neighborSocket.getInputStream());
