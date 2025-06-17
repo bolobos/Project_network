@@ -7,7 +7,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Scanner;
 
-// Symbolise un client / 
+// Classe qui symbolise un client dans le réseau
 public class Client {
 
     private Socket socket = null;
@@ -23,7 +23,7 @@ public class Client {
     public Client() {
     }
 
-    // Constructeur avec deux arguments
+    // Constructeur avec nom, id et IP serveur
     public Client(String name, String id, String ipServ) {
         this.name = name;
         this.id = id;
@@ -33,7 +33,7 @@ public class Client {
         this.ip = localIP.getLocalIP();
     }
 
-    // Getters et setters
+    // Getters et setters pour le nom et l'id du client
     public String getName() {
         return name;
     }
@@ -55,8 +55,15 @@ public class Client {
         return "Client{name='" + name + "', id='" + id + "'}";
     }
 
+    /**
+     * Méthode principale pour écouter le socket et gérer la communication avec le serveur.
+     * @param clientName Nom du client
+     * @param clientId Id du client
+     * @param ipServ Adresse IP du serveur
+     */
     public void listenSocket(String clientName, String clientId, String ipServ) {
 
+        // Message de déconnexion à envoyer lors de l'arrêt du client
         Trame_message disconnectMessage = new Trame_message(
                 1, // Par exemple, 1 pour indiquer une déconnexion
                 ipServ,
@@ -67,12 +74,11 @@ public class Client {
 
         try {
 
-            // Créer le client
+            // Création du socket client
             socket = new Socket(ipServ, port_server);
             System.out.println("Client connected to server at " + ipServ + ":" + port_server);
 
-            
-            // Actions lors de l'arrêt du client
+            // Ajout d'un hook pour gérer la fermeture propre du client
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 System.out.println("Shutting down client...");
                 try {
@@ -111,7 +117,7 @@ public class Client {
             });
             receiveThread.start();
 
-            // Envoyer des messages personnalisés
+            // Boucle pour envoyer des messages personnalisés à d'autres clients
             System.out.println("Type your messages below (type 'exit' to quit):");
             while (true) {
                 System.out.print("Type exit if you want to exit. Else, type ENTER to send message");
@@ -131,7 +137,7 @@ public class Client {
                 System.out.print("Entrez le message: ");
                 String contenu = scanner.nextLine();
 
-
+                // Création de la trame à envoyer
                 Trame_message trame_message = new Trame_message(
                         1,
                         ipServeur,
@@ -144,8 +150,7 @@ public class Client {
 
             }
 
-            // Fermer les ressources
-
+            // Fermeture des ressources à la fin
             if (socket != null && !socket.isClosed()) {
 
                 sendMessage(disconnectMessage, serveur_cible);
@@ -160,7 +165,10 @@ public class Client {
         }
     }
 
-    // Main method to execute the client
+    /**
+     * Point d'entrée principal du client.
+     * @param args Arguments de la ligne de commande : nom, id, ip serveur
+     */
     public static void main(String[] args) {
         if (args.length < 2) {
             System.out.println("Usage: java Client <clientName> <clientId>");
@@ -177,6 +185,11 @@ public class Client {
         client.listenSocket(clientName, clientId, ipServ);
     }
 
+    /**
+     * Envoie une trame à un client cible via son IP.
+     * @param trame La trame à envoyer
+     * @param ipCible L'adresse IP du client cible
+     */
     public void sendMessage(Trame trame, String ipCible) {
         try {
             Socket socket = new Socket(ipCible, 9081);

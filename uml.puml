@@ -1,0 +1,119 @@
+@startuml
+
+' ==== CLASSES PRINCIPALES ====
+
+class AdminClient {
+    +main(args: String[])
+    -launchClientTerminal(clientName, clientId, ipServ)
+}
+
+class AdminServ {
+    +main(args: String[])
+}
+
+class Server {
+    -server: ServerSocket
+    -port_server: int
+    -ipLocal: String
+    -servPrincipal: boolean
+    -rootingTable: Table_routage
+    -state: stateServer
+    +listenSocket()
+    +handleTrameMessage(trame: Trame_message, res: int)
+    +sendMessage(trame: Trame, ipCible: String)
+    +initTrame(): Trame_routage
+    +initNetwork()
+}
+
+enum stateServer {
+    INIT
+    RUNNING
+    STOPPED
+}
+
+Server --> stateServer
+
+class Client {
+    -socket: Socket
+    -ip: String
+    -port_server: int
+    -serveur_cible: String
+    -client_cible: String
+    -name: String
+    -id: String
+    +Client()
+    +Client(name: String, id: String, ipServ: String)
+    +listenSocket(clientName: String, clientId: String, ipServ: String)
+    +sendMessage(trame: Trame, ipCible: String)
+    +main(args: String[])
+}
+
+class LocalIP {
+    -privateIP: String
+    +getLocalIP(): String
+    +getServerLocalIP(serverHost: String): String
+    +setPublicIP(publicIP: String)
+}
+
+class Table_routage {
+    -serveurs: ArrayList<String>
+    -passerelles: ArrayList<Inet4Address>
+    -clients_serveurs: ArrayList<ArrayList<String>>
+    -distance: ArrayList<Integer>
+    +addTable(trame: Trame_routage, adresseSource: Inet4Address): boolean
+    +exportTable(serveur_cible: String, serveur_source: String): Trame_routage
+    +getServeurs(): ArrayList<String>
+    +getPasserelles(): ArrayList<Inet4Address>
+    +getClients_serveurs(): ArrayList<ArrayList<String>>
+    +getDistance(): ArrayList<Integer>
+}
+
+abstract class Trame {
+    -type_message: int
+    -serveur_cible: String
+    -serveur_source: String
+    +getType_message(): int
+    +setType_message(type_message: int)
+    +getServeur_cible(): String
+    +setServeur_cible(serveur_cible: String)
+    +getServeur_source(): String
+    +setServeur_source(serveur_source: String)
+}
+
+class Trame_routage {
+    -serveurs: ArrayList<String>
+    -passerelles: ArrayList<Inet4Address>
+    -clients_serveurs: ArrayList<ArrayList<String>>
+    -distance: ArrayList<Integer>
+    +getServeurs(): ArrayList<String>
+    +getPasserelles(): ArrayList<Inet4Address>
+    +getClients_serveurs(): ArrayList<ArrayList<String>>
+    +getDistance(): ArrayList<Integer>
+}
+
+class Trame_message {
+    -client_cible: String
+    -client_source: String
+    -du: String
+    +redirectMessage(trame: Trame_message, routingTable: Table_routage, serveurCourant: String): int
+    +getClient_cible(): String
+    +setClient_cible(client_cible: String)
+    +getClient_source(): String
+    +setClient_source(client_source: String)
+    +getDu(): String
+    +setDu(du: String)
+}
+
+' ==== RELATIONS ====
+
+Trame <|-- Trame_routage
+Trame <|-- Trame_message
+Server --> Table_routage
+Server --> LocalIP
+Server ..> Trame_message
+Server ..> Trame_routage
+Client --> LocalIP
+Table_routage --> Trame_routage
+Trame_message --> Table_routage
+
+@enduml

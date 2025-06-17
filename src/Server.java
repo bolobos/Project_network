@@ -11,51 +11,63 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-// Server class handle the server, it uses TCP communication via socket objects
+/**
+ * Classe principale représentant un serveur du réseau.
+ * Gère la création du serveur, l'initialisation de la table de routage,
+ * la réception et le traitement des messages, ainsi que la propagation des tables de routage.
+ */
 public class Server {
 
+    /** Socket serveur pour accepter les connexions entrantes. */
     private ServerSocket server = null;
+
+    /** Port d'écoute du serveur. */
     private int port_server = 9081;
+
+    /** Adresse IP locale du serveur. */
     private String ipLocal;
+
+    /** Indique si ce serveur est le serveur principal (initiateur du routage). */
     private boolean servPrincipal = false;
 
+    /** Table de routage du serveur. */
     private Table_routage rootingTable = new Table_routage();
 
+    /** États possibles du serveur. */
     public enum stateServer {
         INIT,
         RUNNING,
         STOPPED
     }
 
+    /** État courant du serveur. */
     private stateServer state = stateServer.INIT;
 
+    /**
+     * Boucle principale du serveur.
+     * Gère l'initialisation, l'écoute des connexions et l'arrêt du serveur.
+     */
     public void listenSocket() {
         while (true) {
             switch (state) {
                 case INIT:
                     try {
-
-                        // INIT OF SERVER
-
-                        // Créer le serveur
+                        // Création du serveur et récupération de l'IP locale
                         server = new ServerSocket(port_server);
                         LocalIP localIP = new LocalIP();
                         ipLocal = localIP.getLocalIP();
-                        System.out
-                                .println("Server created at port " + port_server + " with IP: " + this.ipLocal);
+                        System.out.println("Server created at port " + port_server + " with IP: " + this.ipLocal);
 
-                        // Actions lors de l'arrêt du serveur
+                        // Ajout d'un hook pour gérer l'arrêt propre du serveur
                         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                             System.out.println("Shutting down server...");
                             state = stateServer.STOPPED;
                         }));
 
-                        // INIT PART FOR ROOTING
-
-                        // Initialiser le réseau
+                        // Initialisation du réseau et de la table de routage
                         initNetwork();
 
-                        // End of init -> start the RUNNING PHASE
+                        // Passage à l'état RUNNING
                         state = stateServer.RUNNING;
 
                     } catch (IOException e) {
@@ -65,12 +77,10 @@ public class Server {
                     break;
                 case RUNNING:
                     try {
-
-                        // Boucle pour accepter les nouveaux clients ou serveurs
+                        // Attente et gestion des connexions entrantes (clients ou serveurs)
                         System.out.println("En attente de réception...");
                         Socket client = server.accept();
-                        System.out.println(
-                                "Client or server connected : " + client.getInetAddress().getHostAddress());
+                        System.out.println("Client or server connected : " + client.getInetAddress().getHostAddress());
 
                         try {
                             ObjectInputStream objectIn = new ObjectInputStream(client.getInputStream());
@@ -79,41 +89,35 @@ public class Server {
                             if (receivedObject instanceof Trame_message) {
                                 Trame_message receivedMessage = (Trame_message) receivedObject;
 
-                                // Affichage commun
+                                // Affichage des informations du message reçu
                                 System.out.println("Message reçu : " + receivedMessage.getDu());
                                 System.out.println("Depuis : " + receivedMessage.getServeur_source());
                                 System.out.println("Pour le client : " + receivedMessage.getClient_cible());
 
                                 int res = receivedMessage.redirectMessage(receivedMessage, rootingTable, ipLocal);
 
+                                // Redirection du message selon le code retourné
                                 switch (res) {
                                     case 1:
-                                        // Message destiné au serveur courant
                                         System.out.println("Message destiné au serveur courant.");
                                         // Traiter le message ici si besoin
                                         break;
                                     case 2:
-                                        // Message destiné à un client local
                                         System.out.println("Message destiné à un client local.");
                                         handleTrameMessage(receivedMessage, res);
                                         break;
                                     case 3:
-                                        // Message destiné à un autre serveur (client cible non local)
-                                        System.out.println(
-                                                "Message destiné à un autre serveur (client cible non local).");
+                                        System.out.println("Message destiné à un autre serveur (client cible non local).");
                                         handleTrameMessage(receivedMessage, res);
                                         break;
                                     case 4:
-                                        // Message destiné à un autre serveur (serveur cible différent)
-                                        System.out.println(
-                                                "Message destiné à un autre serveur (serveur cible différent).");
+                                        System.out.println("Message destiné à un autre serveur (serveur cible différent).");
                                         handleTrameMessage(receivedMessage, res);
                                         break;
                                     default:
                                         System.out.println("Code de redirection inconnu : " + res);
                                         break;
                                 }
-
                             }
 
                             client.close();
@@ -127,7 +131,7 @@ public class Server {
                     }
                     break;
                 case STOPPED:
-
+                    // Fermeture propre du serveur
                     if (server != null && !server.isClosed()) {
                         try {
                             server.close();
@@ -135,15 +139,18 @@ public class Server {
                             System.out.println("Erreur lors de la fermeture du serveur : " + ex.getMessage());
                         }
                     }
-
                     break;
-
                 default:
                     break;
             }
         }
     }
 
+    /**
+     * Traite une trame de message reçue selon le code de redirection.
+     * @param trame La trame de message à traiter.
+     * @param res Le code de redirection déterminé par redirectMessage.
+     */
     public void handleTrameMessage(Trame_message trame, int res) {
         String client_cible = trame.getClient_cible();
 
@@ -163,15 +170,13 @@ public class Server {
 
             case 3:
             case 4:
-                // Message destiné à un autre serveur (client cible non local ou serveur cible
-                // différent)
+                // Message destiné à un autre serveur (client cible non local ou serveur cible différent)
                 for (int i = 0; i < rootingTable.getClients_serveurs().size(); i++) {
                     ArrayList<String> clients = rootingTable.getClients_serveurs().get(i);
                     if (clients.contains(client_cible)) {
                         String passerelle = rootingTable.getPasserelles().get(i).getHostAddress();
                         sendMessage(trame, passerelle);
-                        System.out.println(
-                                "Message relayé à la passerelle : " + passerelle + " pour client " + client_cible);
+                        System.out.println("Message relayé à la passerelle : " + passerelle + " pour client " + client_cible);
                         return;
                     }
                 }
@@ -184,6 +189,11 @@ public class Server {
         }
     }
 
+    /**
+     * Envoie une trame à une IP cible via un socket TCP.
+     * @param trame La trame à envoyer.
+     * @param ipCible L'adresse IP de destination.
+     */
     public void sendMessage(Trame trame, String ipCible) {
         try {
             Socket socket = new Socket(ipCible, 9081);
@@ -197,11 +207,13 @@ public class Server {
         }
     }
 
+    /**
+     * Initialise la table de routage à partir des entrées utilisateur.
+     * @return Une trame de routage initialisée.
+     */
     public Trame_routage initTrame() {
-
         Trame_routage trame = null;
 
-        // Exemple de création d'une trame de routage
         try {
             // Création d'un menu pour entrer les IP des serveurs et les clients associés
             ArrayList<String> serveurs = new ArrayList<>();
@@ -213,11 +225,7 @@ public class Server {
 
             System.out.print("Ce serveur est-il le serveur principal ? (oui/non) : ");
             String principalInput = scanner.nextLine().trim().toLowerCase();
-            if (principalInput.equals("oui") || principalInput.equals("o") || principalInput.equals("yes")) {
-                servPrincipal = true;
-            } else {
-                servPrincipal = false;
-            }
+            servPrincipal = principalInput.equals("oui") || principalInput.equals("o") || principalInput.equals("yes");
 
             System.out.print("Combien de serveurs voulez-vous ajouter ? ");
             int nbServeurs = Integer.parseInt(scanner.nextLine());
@@ -261,44 +269,23 @@ public class Server {
 
             rootingTable.addTable(trame, (Inet4Address) InetAddress.getByName(ipLocal));
 
-            // Utilisation de la trame
+            // Affichage de la table de routage initiale
             System.out.println("Serveurs : " + trame.getServeurs());
             System.out.println("Passerelles : " + trame.getPasserelles());
             System.out.println("Clients par serveur : " + trame.getClients_serveurs());
             System.out.println("Distances : " + trame.getDistance());
 
+            // Préparation à l'envoi de la trame aux autres serveurs
             for (String serveur : serveurs) {
-
                 if (!serveur.equals(ipLocal)) {
                     trame.setServeur_cible(serveur);
                     try {
-                        // Attendre que le serveur distant soit prêt à accepter la connexion
-                        // boolean connected = false;
-                        // while (!connected) {
-                        //     try {
-                        //         SocketAddress sockaddr = new InetSocketAddress(serveur, 9081);
-                        //         try (Socket testSocket = new Socket()) {
-                        //             testSocket.connect(sockaddr, 1000); // timeout de 1000 ms
-                        //             System.out.println("Connexion réussie à " + serveur);
-                        //             connected = true;
-                        //             testSocket.close();
-                        //         }
-                        //     } catch (IOException e) {
-                        //         System.out.println(
-                        //                 "Échec de connexion à " + serveur + ", nouvelle tentative dans 500ms...");
-                        //         try {
-                        //             Thread.sleep(500);
-                        //         } catch (InterruptedException ie) {
-                        //             Thread.currentThread().interrupt();
-                        //         }
-                        //     }
-                        // }
+                        // Ici, tu peux tester la disponibilité du serveur distant si besoin
+                        // (code commenté dans la version actuelle)
                     } catch (Exception e) {
-                        System.out
-                                .println("Erreur lors de la connexion au serveur " + serveur + " : " + e.getMessage());
+                        System.out.println("Erreur lors de la connexion au serveur " + serveur + " : " + e.getMessage());
                     }
                 }
-
             }
 
         } catch (UnknownHostException e) {
@@ -306,11 +293,14 @@ public class Server {
         }
 
         return trame;
-
     }
 
+    /**
+     * Initialise le réseau et lance l'échange des tables de routage.
+     * Si le serveur est principal, il envoie la première trame.
+     * Attend ensuite les trames de routage des voisins et met à jour la table jusqu'à convergence.
+     */
     public void initNetwork() {
-
         int sameDataCount = 0;
 
         Trame_routage firstTrame = initTrame();
@@ -320,23 +310,19 @@ public class Server {
             System.out.println("Appuyez sur Entrée pour continuer et envoyer les premières trames de routage...");
             scanner.nextLine();
 
-            // Envoie de la table pour commencer
+            // Envoie de la table pour commencer (ici, exemple avec une IP en dur)
             // for (String serveur : rootingTable.getServeurs()) {
             //     sendMessage(firstTrame, serveur);
             //     System.out.println("Tables de routage envoyées au serveur voisin: " + serveur);
             // }
             sendMessage(firstTrame, "192.168.1.62");
-            //     System.out.println("Tables de routage envoyées au serveur voisin: " + serveur);
         }
 
         // Répète tant que les données ne sont pas les mêmes 5 fois de suite
         while (sameDataCount < 5) {
-
-            // Attendre la première trame de routage d'un voisin
             try {
-
                 System.out.println("En attente ...");
-                // Fonction bloquante
+                // Attente d'une trame de routage d'un voisin
                 Socket neighborSocket = server.accept();
                 System.out.println("Serveur accepté.");
 
@@ -347,8 +333,7 @@ public class Server {
                     Trame_routage trame = (Trame_routage) receivedObject;
                     Inet4Address inet4 = (Inet4Address) InetAddress.getByName(ipLocal);
 
-                    // Si la table de routage a été mise à jour, renvoyer la table aux serveurs
-                    // voisins
+                    // Si la table de routage a été mise à jour, renvoyer la table aux serveurs voisins
                     if (rootingTable.addTable(trame, inet4)) {
                         for (String serveur : rootingTable.getServeurs()) {
                             Trame_routage trame_r = rootingTable.exportTable(serveur, this.ipLocal);
