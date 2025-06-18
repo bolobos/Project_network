@@ -57,6 +57,7 @@ public class Table_routage {
         ArrayList<ArrayList<String>> tempClientsServeurs = trame.getClients_serveurs();
         ArrayList<Integer> tempDistance = trame.getDistance();
         boolean res = false;
+        LocalIP localIP;
 
         System.out.println("----- DEBUT TRAITEMENT DE LA TRAME DE ROUTAGE -----");
 
@@ -93,6 +94,17 @@ public class Table_routage {
                             "NOUVEAU CHEMIN POUR IP " + serveur + " DE " + distance.get(index) + " DE DISTANCE.");
                 }
 
+            }
+
+            // Si l'adresse IP du serveur est égale à l'adresse IP locale, mettre la distance à 0
+            try {
+                localIP = new LocalIP();
+                String myIP = localIP.getLocalIP();
+                if (serveur.equals(myIP)) {
+                    distance.set(serveurs.indexOf(serveur), 0);
+                }
+            } catch (Exception e) {
+                System.err.println("Erreur lors de la récupération de l'adresse IP locale : " + e.getMessage());
             }
         }
 
